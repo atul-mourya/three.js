@@ -1,20 +1,15 @@
-/**
- * @author bhouston / http://exocortex.com
- * @author TristanVALCKE / https://github.com/Itee
- */
 /* global QUnit */
 
 import { Box3 } from '../../../../src/math/Box3';
 import { Sphere } from '../../../../src/math/Sphere';
+import { Triangle } from '../../../../src/math/Triangle';
 import { Plane } from '../../../../src/math/Plane';
 import { Vector3 } from '../../../../src/math/Vector3';
 import { Matrix4 } from '../../../../src/math/Matrix4';
 import { Mesh } from '../../../../src/objects/Mesh';
 import { BufferAttribute } from '../../../../src/core/BufferAttribute';
-import {
-	BoxGeometry,
-	BoxBufferGeometry
-} from '../../../../src/geometries/BoxGeometry';
+import { BoxGeometry } from '../../../../src/geometries/BoxGeometry';
+import { BoxBufferGeometry } from '../../../../src/geometries/BoxBufferGeometry';
 import {
 	negInf3,
 	posInf3,
@@ -53,9 +48,13 @@ export default QUnit.module( 'Maths', () => {
 		} );
 
 		// PUBLIC STUFF
-		QUnit.todo( "isBox3", ( assert ) => {
+		QUnit.test( "isBox3", ( assert ) => {
 
-			assert.ok( false, "everything's gonna be alright" );
+			var a = new Box3();
+			assert.ok( a.isBox3 === true, "Passed!" );
+
+			var b = new Sphere();
+			assert.ok( ! b.isBox3, "Passed!" );
 
 		} );
 
@@ -69,9 +68,13 @@ export default QUnit.module( 'Maths', () => {
 
 		} );
 
-		QUnit.todo( "setFromArray", ( assert ) => {
+		QUnit.test( "setFromArray", ( assert ) => {
 
-			assert.ok( false, "everything's gonna be alright" );
+			var a = new Box3();
+
+			a.setFromArray( [ 0, 0, 0, 1, 1, 1, 2, 2, 2 ] );
+			assert.ok( a.min.equals( zero3 ), "Passed!" );
+			assert.ok( a.max.equals( two3 ), "Passed!" );
 
 		} );
 
@@ -121,20 +124,31 @@ export default QUnit.module( 'Maths', () => {
 
 			var a = new Box3( zero3.clone(), one3.clone() );
 			var b = a.clone();
+			var centerA = new Vector3();
+			var sizeA = new Vector3();
+			var sizeB = new Vector3();
 			var newCenter = one3;
 			var newSize = two3;
 
-			a.setFromCenterAndSize( a.getCenter(), a.getSize() );
+			a.getCenter( centerA );
+			a.getSize( sizeA );
+			a.setFromCenterAndSize( centerA, sizeA );
 			assert.ok( a.equals( b ), "Same values: no changes" );
 
-			a.setFromCenterAndSize( newCenter, a.getSize() );
-			assert.ok( a.getCenter().equals( newCenter ), "Move center: correct new center" );
-			assert.ok( a.getSize().equals( b.getSize() ), "Move center: no change in size" );
+			a.setFromCenterAndSize( newCenter, sizeA );
+			a.getCenter( centerA );
+			a.getSize( sizeA );
+			b.getSize( sizeB );
+
+			assert.ok( centerA.equals( newCenter ), "Move center: correct new center" );
+			assert.ok( sizeA.equals( sizeB ), "Move center: no change in size" );
 			assert.notOk( a.equals( b ), "Move center: no longer equal to old values" );
 
-			a.setFromCenterAndSize( a.getCenter(), newSize );
-			assert.ok( a.getCenter().equals( newCenter ), "Resize: no change to center" );
-			assert.ok( a.getSize().equals( newSize ), "Resize: correct new size" );
+			a.setFromCenterAndSize( centerA, newSize );
+			a.getCenter( centerA );
+			a.getSize( sizeA );
+			assert.ok( centerA.equals( newCenter ), "Resize: no change to center" );
+			assert.ok( sizeA.equals( newSize ), "Resize: correct new size" );
 			assert.notOk( a.equals( b ), "Resize: no longer equal to old values" );
 
 		} );
@@ -152,9 +166,19 @@ export default QUnit.module( 'Maths', () => {
 
 		} );
 
-		QUnit.todo( "clone", ( assert ) => {
+		QUnit.test( "clone", ( assert ) => {
 
-			assert.ok( false, "everything's gonna be alright" );
+
+			var a = new Box3( zero3.clone(), one3.clone() );
+
+			var b = a.clone();
+			assert.ok( b.min.equals( zero3 ), "Passed!" );
+			assert.ok( b.max.equals( one3 ), "Passed!" );
+
+			a = new Box3();
+			var b = a.clone();
+			assert.ok( b.min.equals( posInf3 ), "Passed!" );
+			assert.ok( b.max.equals( negInf3 ), "Passed!" );
 
 		} );
 
@@ -187,74 +211,93 @@ export default QUnit.module( 'Maths', () => {
 
 		} );
 
-		QUnit.todo( "isEmpty", ( assert ) => {
+		QUnit.test( "isEmpty", ( assert ) => {
 
-			assert.ok( false, "everything's gonna be alright" );
+			var a = new Box3( zero3.clone(), zero3.clone() );
+			assert.ok( ! a.isEmpty(), "Passed!" );
+
+			var a = new Box3( zero3.clone(), one3.clone() );
+			assert.ok( ! a.isEmpty(), "Passed!" );
+
+			var a = new Box3( two3.clone(), one3.clone() );
+			assert.ok( a.isEmpty(), "Passed!" );
+
+			var a = new Box3( posInf3.clone(), negInf3.clone() );
+			assert.ok( a.isEmpty(), "Passed!" );
+
 
 		} );
 
 		QUnit.test( "getCenter", ( assert ) => {
 
 			var a = new Box3( zero3.clone(), zero3.clone() );
+			var center = new Vector3();
 
-			assert.ok( a.getCenter().equals( zero3 ), "Passed!" );
+			assert.ok( a.getCenter( center ).equals( zero3 ), "Passed!" );
 
 			var a = new Box3( zero3.clone(), one3.clone() );
 			var midpoint = one3.clone().multiplyScalar( 0.5 );
-			assert.ok( a.getCenter().equals( midpoint ), "Passed!" );
+			assert.ok( a.getCenter( center ).equals( midpoint ), "Passed!" );
 
 		} );
 
 		QUnit.test( "getSize", ( assert ) => {
 
 			var a = new Box3( zero3.clone(), zero3.clone() );
+			var size = new Vector3();
 
-			assert.ok( a.getSize().equals( zero3 ), "Passed!" );
+			assert.ok( a.getSize( size ).equals( zero3 ), "Passed!" );
 
 			var a = new Box3( zero3.clone(), one3.clone() );
-			assert.ok( a.getSize().equals( one3 ), "Passed!" );
+			assert.ok( a.getSize( size ).equals( one3 ), "Passed!" );
 
 		} );
 
 		QUnit.test( "expandByPoint", ( assert ) => {
 
 			var a = new Box3( zero3.clone(), zero3.clone() );
+			var center = new Vector3();
+			var size = new Vector3();
 
 			a.expandByPoint( zero3 );
-			assert.ok( a.getSize().equals( zero3 ), "Passed!" );
+			assert.ok( a.getSize( size ).equals( zero3 ), "Passed!" );
 
 			a.expandByPoint( one3 );
-			assert.ok( a.getSize().equals( one3 ), "Passed!" );
+			assert.ok( a.getSize( size ).equals( one3 ), "Passed!" );
 
 			a.expandByPoint( one3.clone().negate() );
-			assert.ok( a.getSize().equals( one3.clone().multiplyScalar( 2 ) ), "Passed!" );
-			assert.ok( a.getCenter().equals( zero3 ), "Passed!" );
+			assert.ok( a.getSize( size ).equals( one3.clone().multiplyScalar( 2 ) ), "Passed!" );
+			assert.ok( a.getCenter( center ).equals( zero3 ), "Passed!" );
 
 		} );
 
 		QUnit.test( "expandByVector", ( assert ) => {
 
 			var a = new Box3( zero3.clone(), zero3.clone() );
+			var center = new Vector3();
+			var size = new Vector3();
 
 			a.expandByVector( zero3 );
-			assert.ok( a.getSize().equals( zero3 ), "Passed!" );
+			assert.ok( a.getSize( size ).equals( zero3 ), "Passed!" );
 
 			a.expandByVector( one3 );
-			assert.ok( a.getSize().equals( one3.clone().multiplyScalar( 2 ) ), "Passed!" );
-			assert.ok( a.getCenter().equals( zero3 ), "Passed!" );
+			assert.ok( a.getSize( size ).equals( one3.clone().multiplyScalar( 2 ) ), "Passed!" );
+			assert.ok( a.getCenter( center ).equals( zero3 ), "Passed!" );
 
 		} );
 
 		QUnit.test( "expandByScalar", ( assert ) => {
 
 			var a = new Box3( zero3.clone(), zero3.clone() );
+			var center = new Vector3();
+			var size = new Vector3();
 
 			a.expandByScalar( 0 );
-			assert.ok( a.getSize().equals( zero3 ), "Passed!" );
+			assert.ok( a.getSize( size ).equals( zero3 ), "Passed!" );
 
 			a.expandByScalar( 1 );
-			assert.ok( a.getSize().equals( one3.clone().multiplyScalar( 2 ) ), "Passed!" );
-			assert.ok( a.getCenter().equals( zero3 ), "Passed!" );
+			assert.ok( a.getSize( size ).equals( one3.clone().multiplyScalar( 2 ) ), "Passed!" );
+			assert.ok( a.getCenter( center ).equals( zero3 ), "Passed!" );
 
 		} );
 
@@ -298,6 +341,9 @@ export default QUnit.module( 'Maths', () => {
 			assert.ok( a.min.equals( new Vector3( - 0.25, - 0.25, - 0.25 ) ), "Smaller box: correct new minimum" );
 			assert.ok( a.max.equals( new Vector3( 1, 1, 1 ) ), "Smaller box: correct new maximum" );
 
+			//
+			assert.ok( new Box3().expandByObject( new Mesh() ).isEmpty() === true, "The AABB of a mesh with inital geometry is empty." );
+
 		} );
 
 		QUnit.test( "containsPoint", ( assert ) => {
@@ -334,13 +380,19 @@ export default QUnit.module( 'Maths', () => {
 
 			var a = new Box3( zero3.clone(), one3.clone() );
 			var b = new Box3( one3.clone().negate(), one3.clone() );
+			var parameter = new Vector3();
 
-			assert.ok( a.getParameter( new Vector3( 0, 0, 0 ) ).equals( new Vector3( 0, 0, 0 ) ), "Passed!" );
-			assert.ok( a.getParameter( new Vector3( 1, 1, 1 ) ).equals( new Vector3( 1, 1, 1 ) ), "Passed!" );
+			a.getParameter( zero3, parameter );
+			assert.ok( parameter.equals( zero3 ), "Passed!" );
+			a.getParameter( one3, parameter );
+			assert.ok( parameter.equals( one3 ), "Passed!" );
 
-			assert.ok( b.getParameter( new Vector3( - 1, - 1, - 1 ) ).equals( new Vector3( 0, 0, 0 ) ), "Passed!" );
-			assert.ok( b.getParameter( new Vector3( 0, 0, 0 ) ).equals( new Vector3( 0.5, 0.5, 0.5 ) ), "Passed!" );
-			assert.ok( b.getParameter( new Vector3( 1, 1, 1 ) ).equals( new Vector3( 1, 1, 1 ) ), "Passed!" );
+			b.getParameter( one3.clone().negate(), parameter );
+			assert.ok( parameter.equals( zero3 ), "Passed!" );
+			b.getParameter( zero3, parameter );
+			assert.ok( parameter.equals( new Vector3( 0.5, 0.5, 0.5 ) ), "Passed!" );
+			b.getParameter( one3, parameter );
+			assert.ok( parameter.equals( one3 ), "Passed!" );
 
 		} );
 
@@ -383,10 +435,39 @@ export default QUnit.module( 'Maths', () => {
 			var b = new Plane( new Vector3( 0, 1, 0 ), 1 );
 			var c = new Plane( new Vector3( 0, 1, 0 ), 1.25 );
 			var d = new Plane( new Vector3( 0, - 1, 0 ), 1.25 );
+			var e = new Plane( new Vector3( 0, 1, 0 ), 0.25 );
+			var f = new Plane( new Vector3( 0, 1, 0 ), - 0.25 );
+			var g = new Plane( new Vector3( 0, 1, 0 ), - 0.75 );
+			var h = new Plane( new Vector3( 0, 1, 0 ), - 1 );
+			var i = new Plane( new Vector3( 1, 1, 1 ).normalize(), - 1.732 );
+			var j = new Plane( new Vector3( 1, 1, 1 ).normalize(), - 1.733 );
 
-			assert.ok( a.intersectsPlane( b ), "Passed!" );
+			assert.ok( ! a.intersectsPlane( b ), "Passed!" );
 			assert.ok( ! a.intersectsPlane( c ), "Passed!" );
 			assert.ok( ! a.intersectsPlane( d ), "Passed!" );
+			assert.ok( ! a.intersectsPlane( e ), "Passed!" );
+			assert.ok( a.intersectsPlane( f ), "Passed!" );
+			assert.ok( a.intersectsPlane( g ), "Passed!" );
+			assert.ok( a.intersectsPlane( h ), "Passed!" );
+			assert.ok( a.intersectsPlane( i ), "Passed!" );
+			assert.ok( ! a.intersectsPlane( j ), "Passed!" );
+
+		} );
+
+		QUnit.test( "intersectsTriangle", ( assert ) => {
+
+			var a = new Box3( one3.clone(), two3.clone() );
+			var b = new Triangle( new Vector3( 1.5, 1.5, 2.5 ), new Vector3( 2.5, 1.5, 1.5 ), new Vector3( 1.5, 2.5, 1.5 ) );
+			var c = new Triangle( new Vector3( 1.5, 1.5, 3.5 ), new Vector3( 3.5, 1.5, 1.5 ), new Vector3( 1.5, 1.5, 1.5 ) );
+			var d = new Triangle( new Vector3( 1.5, 1.75, 3 ), new Vector3( 3, 1.75, 1.5 ), new Vector3( 1.5, 2.5, 1.5 ) );
+			var e = new Triangle( new Vector3( 1.5, 1.8, 3 ), new Vector3( 3, 1.8, 1.5 ), new Vector3( 1.5, 2.5, 1.5 ) );
+			var f = new Triangle( new Vector3( 1.5, 2.5, 3 ), new Vector3( 3, 2.5, 1.5 ), new Vector3( 1.5, 2.5, 1.5 ) );
+
+			assert.ok( a.intersectsTriangle( b ), "Passed!" );
+			assert.ok( a.intersectsTriangle( c ), "Passed!" );
+			assert.ok( a.intersectsTriangle( d ), "Passed!" );
+			assert.ok( ! a.intersectsTriangle( e ), "Passed!" );
+			assert.ok( ! a.intersectsTriangle( f ), "Passed!" );
 
 		} );
 
@@ -394,16 +475,25 @@ export default QUnit.module( 'Maths', () => {
 
 			var a = new Box3( zero3.clone(), zero3.clone() );
 			var b = new Box3( one3.clone().negate(), one3.clone() );
+			var point = new Vector3();
 
-			assert.ok( a.clampPoint( new Vector3( 0, 0, 0 ) ).equals( new Vector3( 0, 0, 0 ) ), "Passed!" );
-			assert.ok( a.clampPoint( new Vector3( 1, 1, 1 ) ).equals( new Vector3( 0, 0, 0 ) ), "Passed!" );
-			assert.ok( a.clampPoint( new Vector3( - 1, - 1, - 1 ) ).equals( new Vector3( 0, 0, 0 ) ), "Passed!" );
+			a.clampPoint( zero3, point );
+			assert.ok( point.equals( zero3 ), "Passed!" );
+			a.clampPoint( one3, point );
+			assert.ok( point.equals( zero3 ), "Passed!" );
+			a.clampPoint( one3.clone().negate(), point );
+			assert.ok( point.equals( zero3 ), "Passed!" );
 
-			assert.ok( b.clampPoint( new Vector3( 2, 2, 2 ) ).equals( new Vector3( 1, 1, 1 ) ), "Passed!" );
-			assert.ok( b.clampPoint( new Vector3( 1, 1, 1 ) ).equals( new Vector3( 1, 1, 1 ) ), "Passed!" );
-			assert.ok( b.clampPoint( new Vector3( 0, 0, 0 ) ).equals( new Vector3( 0, 0, 0 ) ), "Passed!" );
-			assert.ok( b.clampPoint( new Vector3( - 1, - 1, - 1 ) ).equals( new Vector3( - 1, - 1, - 1 ) ), "Passed!" );
-			assert.ok( b.clampPoint( new Vector3( - 2, - 2, - 2 ) ).equals( new Vector3( - 1, - 1, - 1 ) ), "Passed!" );
+			b.clampPoint( new Vector3( 2, 2, 2 ), point );
+			assert.ok( point.equals( one3 ), "Passed!" );
+			b.clampPoint( one3, point );
+			assert.ok( point.equals( one3 ), "Passed!" );
+			b.clampPoint( zero3, point );
+			assert.ok( point.equals( zero3 ), "Passed!" );
+			b.clampPoint( one3.clone().negate(), point );
+			assert.ok( point.equals( one3.clone().negate() ), "Passed!" );
+			b.clampPoint( new Vector3( - 2, - 2, - 2 ), point );
+			assert.ok( point.equals( one3.clone().negate() ), "Passed!" );
 
 		} );
 
@@ -429,10 +519,11 @@ export default QUnit.module( 'Maths', () => {
 			var a = new Box3( zero3.clone(), zero3.clone() );
 			var b = new Box3( zero3.clone(), one3.clone() );
 			var c = new Box3( one3.clone().negate(), one3.clone() );
+			var sphere = new Sphere();
 
-			assert.ok( a.getBoundingSphere().equals( new Sphere( zero3, 0 ) ), "Passed!" );
-			assert.ok( b.getBoundingSphere().equals( new Sphere( one3.clone().multiplyScalar( 0.5 ), Math.sqrt( 3 ) * 0.5 ) ), "Passed!" );
-			assert.ok( c.getBoundingSphere().equals( new Sphere( zero3, Math.sqrt( 12 ) * 0.5 ) ), "Passed!" );
+			assert.ok( a.getBoundingSphere( sphere ).equals( new Sphere( zero3, 0 ) ), "Passed!" );
+			assert.ok( b.getBoundingSphere( sphere ).equals( new Sphere( one3.clone().multiplyScalar( 0.5 ), Math.sqrt( 3 ) * 0.5 ) ), "Passed!" );
+			assert.ok( c.getBoundingSphere( sphere ).equals( new Sphere( zero3, Math.sqrt( 12 ) * 0.5 ) ), "Passed!" );
 
 		} );
 
@@ -495,9 +586,32 @@ export default QUnit.module( 'Maths', () => {
 
 		} );
 
-		QUnit.todo( "equals", ( assert ) => {
+		QUnit.test( "equals", ( assert ) => {
 
-			assert.ok( false, "everything's gonna be alright" );
+			var a = new Box3();
+			var b = new Box3();
+			assert.ok( b.equals( a ), "Passed!" );
+			assert.ok( a.equals( b ), "Passed!" );
+
+			a = new Box3( one3, two3 );
+			b = new Box3( one3, two3 );
+			assert.ok( b.equals( a ), "Passed!" );
+			assert.ok( a.equals( b ), "Passed!" );
+
+			a = new Box3( one3, two3 );
+			b = a.clone();
+			assert.ok( b.equals( a ), "Passed!" );
+			assert.ok( a.equals( b ), "Passed!" );
+
+			a = new Box3( one3, two3 );
+			b = new Box3( one3, one3 );
+			assert.ok( ! b.equals( a ), "Passed!" );
+			assert.ok( ! a.equals( b ), "Passed!" );
+
+			a = new Box3();
+			b = new Box3( one3, one3 );
+			assert.ok( ! b.equals( a ), "Passed!" );
+			assert.ok( ! a.equals( b ), "Passed!" );
 
 		} );
 

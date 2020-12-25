@@ -2,13 +2,6 @@ import { EventDispatcher } from '../core/EventDispatcher.js';
 import { Texture } from '../textures/Texture.js';
 import { LinearFilter } from '../constants.js';
 import { Vector4 } from '../math/Vector4.js';
-import { _Math } from '../math/Math.js';
-
-/**
- * @author szimek / https://github.com/szimek/
- * @author alteredq / http://alteredqualia.com/
- * @author Marius Kintel / https://github.com/kintel
- */
 
 /*
  In options, we can specify:
@@ -16,8 +9,6 @@ import { _Math } from '../math/Math.js';
  * depthBuffer/stencilBuffer: Booleans to indicate if we should generate these buffers
 */
 function WebGLRenderTarget( width, height, options ) {
-
-	this.uuid = _Math.generateUUID();
 
 	this.width = width;
 	this.height = height;
@@ -29,12 +20,17 @@ function WebGLRenderTarget( width, height, options ) {
 
 	options = options || {};
 
-	if ( options.minFilter === undefined ) options.minFilter = LinearFilter;
+	this.texture = new Texture( undefined, options.mapping, options.wrapS, options.wrapT, options.magFilter, options.minFilter, options.format, options.type, options.anisotropy, options.encoding );
 
-	this.texture = new Texture( undefined, undefined, options.wrapS, options.wrapT, options.magFilter, options.minFilter, options.format, options.type, options.anisotropy, options.encoding );
+	this.texture.image = {};
+	this.texture.image.width = width;
+	this.texture.image.height = height;
+
+	this.texture.generateMipmaps = options.generateMipmaps !== undefined ? options.generateMipmaps : false;
+	this.texture.minFilter = options.minFilter !== undefined ? options.minFilter : LinearFilter;
 
 	this.depthBuffer = options.depthBuffer !== undefined ? options.depthBuffer : true;
-	this.stencilBuffer = options.stencilBuffer !== undefined ? options.stencilBuffer : true;
+	this.stencilBuffer = options.stencilBuffer !== undefined ? options.stencilBuffer : false;
 	this.depthTexture = options.depthTexture !== undefined ? options.depthTexture : null;
 
 }
@@ -51,6 +47,9 @@ WebGLRenderTarget.prototype = Object.assign( Object.create( EventDispatcher.prot
 
 			this.width = width;
 			this.height = height;
+
+			this.texture.image.width = width;
+			this.texture.image.height = height;
 
 			this.dispose();
 

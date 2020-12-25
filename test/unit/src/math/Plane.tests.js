@@ -1,13 +1,10 @@
-/**
- * @author bhouston / http://exocortex.com
- * @author TristanVALCKE / https://github.com/Itee
- */
 /* global QUnit */
 
 import { Plane } from '../../../../src/math/Plane';
 import { Vector3 } from '../../../../src/math/Vector3';
 import { Line3 } from '../../../../src/math/Line3';
 import { Sphere } from '../../../../src/math/Sphere';
+import { Box3 } from '../../../../src/math/Box3';
 import { Matrix4 } from '../../../../src/math/Matrix4';
 import {
 	x,
@@ -54,9 +51,14 @@ export default QUnit.module( 'Maths', () => {
 		} );
 
 		// PUBLIC STUFF
-		QUnit.todo( "isPlane", ( assert ) => {
+		QUnit.test( "isPlane", ( assert ) => {
 
-			assert.ok( false, "everything's gonna be alright" );
+			var a = new Plane();
+			assert.ok( a.isPlane === true, "Passed!" );
+
+			var b = new Vector3();
+			assert.ok( ! b.isPlane, "Passed!" );
+
 
 		} );
 
@@ -118,9 +120,13 @@ export default QUnit.module( 'Maths', () => {
 
 		} );
 
-		QUnit.todo( "clone", ( assert ) => {
+		QUnit.test( "clone", ( assert ) => {
 
-			assert.ok( false, "everything's gonna be alright" );
+			var a = new Plane( new Vector3( 2.0, 0.5, 0.25 ) );
+			var b = a.clone();
+
+			assert.ok( a.equals( b ), "clones are equal" );
+
 
 		} );
 
@@ -173,9 +179,10 @@ export default QUnit.module( 'Maths', () => {
 		QUnit.test( "distanceToPoint", ( assert ) => {
 
 			var a = new Plane( new Vector3( 2, 0, 0 ), - 2 );
+			var point = new Vector3();
 
-			a.normalize();
-			assert.ok( a.distanceToPoint( a.projectPoint( zero3.clone() ) ) === 0, "Passed!" );
+			a.normalize().projectPoint( zero3.clone(), point );
+			assert.ok( a.distanceToPoint( point ) === 0, "Passed!" );
 			assert.ok( a.distanceToPoint( new Vector3( 4, 0, 0 ) ) === 3, "Passed!" );
 
 		} );
@@ -198,60 +205,85 @@ export default QUnit.module( 'Maths', () => {
 		QUnit.test( "projectPoint", ( assert ) => {
 
 			var a = new Plane( new Vector3( 1, 0, 0 ), 0 );
+			var point = new Vector3();
 
-			assert.ok( a.projectPoint( new Vector3( 10, 0, 0 ) ).equals( zero3 ), "Passed!" );
-			assert.ok( a.projectPoint( new Vector3( - 10, 0, 0 ) ).equals( zero3 ), "Passed!" );
+			a.projectPoint( new Vector3( 10, 0, 0 ), point );
+			assert.ok( point.equals( zero3 ), "Passed!" );
+			a.projectPoint( new Vector3( - 10, 0, 0 ), point );
+			assert.ok( point.equals( zero3 ), "Passed!" );
 
 			var a = new Plane( new Vector3( 0, 1, 0 ), - 1 );
-			assert.ok( a.projectPoint( new Vector3( 0, 0, 0 ) ).equals( new Vector3( 0, 1, 0 ) ), "Passed!" );
-			assert.ok( a.projectPoint( new Vector3( 0, 1, 0 ) ).equals( new Vector3( 0, 1, 0 ) ), "Passed!" );
+			a.projectPoint( new Vector3( 0, 0, 0 ), point );
+			assert.ok( point.equals( new Vector3( 0, 1, 0 ) ), "Passed!" );
+			a.projectPoint( new Vector3( 0, 1, 0 ), point );
+			assert.ok( point.equals( new Vector3( 0, 1, 0 ) ), "Passed!" );
 
 		} );
 
 		QUnit.test( "isInterestionLine/intersectLine", ( assert ) => {
 
 			var a = new Plane( new Vector3( 1, 0, 0 ), 0 );
+			var point = new Vector3();
 
 			var l1 = new Line3( new Vector3( - 10, 0, 0 ), new Vector3( 10, 0, 0 ) );
-			assert.ok( a.intersectsLine( l1 ), "Passed!" );
-			assert.ok( a.intersectLine( l1 ).equals( new Vector3( 0, 0, 0 ) ), "Passed!" );
+			a.intersectLine( l1, point );
+			assert.ok( point.equals( new Vector3( 0, 0, 0 ) ), "Passed!" );
 
 			var a = new Plane( new Vector3( 1, 0, 0 ), - 3 );
-
-			assert.ok( a.intersectsLine( l1 ), "Passed!" );
-			assert.ok( a.intersectLine( l1 ).equals( new Vector3( 3, 0, 0 ) ), "Passed!" );
-
-			var a = new Plane( new Vector3( 1, 0, 0 ), - 11 );
-
-			assert.ok( ! a.intersectsLine( l1 ), "Passed!" );
-			assert.ok( a.intersectLine( l1 ) === undefined, "Passed!" );
-
-			var a = new Plane( new Vector3( 1, 0, 0 ), 11 );
-
-			assert.ok( ! a.intersectsLine( l1 ), "Passed!" );
-			assert.ok( a.intersectLine( l1 ) === undefined, "Passed!" );
+			a.intersectLine( l1, point );
+			assert.ok( point.equals( new Vector3( 3, 0, 0 ) ), "Passed!" );
 
 		} );
 
-		QUnit.todo( "intersectsBox", ( assert ) => {
+		QUnit.test( "intersectsBox", ( assert ) => {
 
-			assert.ok( false, "everything's gonna be alright" );
+			var a = new Box3( zero3.clone(), one3.clone() );
+			var b = new Plane( new Vector3( 0, 1, 0 ), 1 );
+			var c = new Plane( new Vector3( 0, 1, 0 ), 1.25 );
+			var d = new Plane( new Vector3( 0, - 1, 0 ), 1.25 );
+			var e = new Plane( new Vector3( 0, 1, 0 ), 0.25 );
+			var f = new Plane( new Vector3( 0, 1, 0 ), - 0.25 );
+			var g = new Plane( new Vector3( 0, 1, 0 ), - 0.75 );
+			var h = new Plane( new Vector3( 0, 1, 0 ), - 1 );
+			var i = new Plane( new Vector3( 1, 1, 1 ).normalize(), - 1.732 );
+			var j = new Plane( new Vector3( 1, 1, 1 ).normalize(), - 1.733 );
+
+			assert.ok( ! b.intersectsBox( a ), "Passed!" );
+			assert.ok( ! c.intersectsBox( a ), "Passed!" );
+			assert.ok( ! d.intersectsBox( a ), "Passed!" );
+			assert.ok( ! e.intersectsBox( a ), "Passed!" );
+			assert.ok( f.intersectsBox( a ), "Passed!" );
+			assert.ok( g.intersectsBox( a ), "Passed!" );
+			assert.ok( h.intersectsBox( a ), "Passed!" );
+			assert.ok( i.intersectsBox( a ), "Passed!" );
+			assert.ok( ! j.intersectsBox( a ), "Passed!" );
 
 		} );
 
-		QUnit.todo( "intersectsSphere", ( assert ) => {
+		QUnit.test( "intersectsSphere", ( assert ) => {
 
-			assert.ok( false, "everything's gonna be alright" );
+			var a = new Sphere( zero3.clone(), 1 );
+			var b = new Plane( new Vector3( 0, 1, 0 ), 1 );
+			var c = new Plane( new Vector3( 0, 1, 0 ), 1.25 );
+			var d = new Plane( new Vector3( 0, - 1, 0 ), 1.25 );
+
+			assert.ok( b.intersectsSphere( a ), "Passed!" );
+			assert.ok( ! c.intersectsSphere( a ), "Passed!" );
+			assert.ok( ! d.intersectsSphere( a ), "Passed!" );
 
 		} );
 
 		QUnit.test( "coplanarPoint", ( assert ) => {
 
+			var point = new Vector3();
+
 			var a = new Plane( new Vector3( 1, 0, 0 ), 0 );
-			assert.ok( a.distanceToPoint( a.coplanarPoint() ) === 0, "Passed!" );
+			a.coplanarPoint( point );
+			assert.ok( a.distanceToPoint( point ) === 0, "Passed!" );
 
 			var a = new Plane( new Vector3( 0, 1, 0 ), - 1 );
-			assert.ok( a.distanceToPoint( a.coplanarPoint() ) === 0, "Passed!" );
+			a.coplanarPoint( point );
+			assert.ok( a.distanceToPoint( point ) === 0, "Passed!" );
 
 		} );
 

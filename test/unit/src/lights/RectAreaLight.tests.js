@@ -1,9 +1,6 @@
-/**
- * @author TristanVALCKE / https://github.com/Itee
- * @author moraxy / https://github.com/moraxy
- */
 /* global QUnit */
 
+import { runStdLightTests } from '../../utils/qunit-utils';
 import { RectAreaLight } from '../../../../src/lights/RectAreaLight';
 
 export default QUnit.module( 'Lights', () => {

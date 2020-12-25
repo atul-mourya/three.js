@@ -1,9 +1,7 @@
-/**
- * @author TristanVALCKE / https://github.com/Itee
- */
 /* global QUnit */
 
-import { KeyframeTrack } from '../../../../src/animation/KeyframeTrack';
+import { NumberKeyframeTrack } from '../../../../src/animation/tracks/NumberKeyframeTrack';
+import { CONSOLE_LEVEL } from '../../utils/console-wrapper';
 
 export default QUnit.module( 'Animation', () => {
 
@@ -17,19 +15,7 @@ export default QUnit.module( 'Animation', () => {
 		} );
 
 		// STATIC STUFF
-		QUnit.todo( "parse", ( assert ) => {
-
-			assert.ok( false, "everything's gonna be alright" );
-
-		} );
-
 		QUnit.todo( "toJSON", ( assert ) => {
-
-			assert.ok( false, "everything's gonna be alright" );
-
-		} );
-
-		QUnit.todo( "_getTrackTypeForValueTypeName", ( assert ) => {
 
 			assert.ok( false, "everything's gonna be alright" );
 
@@ -108,19 +94,32 @@ export default QUnit.module( 'Animation', () => {
 
 		} );
 
-		QUnit.todo( "validate", ( assert ) => {
+		QUnit.test( 'validate', ( assert ) => {
 
-			assert.ok( false, "everything's gonna be alright" );
+			var validTrack = new NumberKeyframeTrack( '.material.opacity', [ 0, 1 ], [ 0, 0.5 ] );
+			var invalidTrack = new NumberKeyframeTrack( '.material.opacity', [ 0, 1 ], [ 0, NaN ] );
+
+			assert.ok( validTrack.validate() );
+
+			console.level = CONSOLE_LEVEL.OFF;
+			assert.notOk( invalidTrack.validate() );
+			console.level = CONSOLE_LEVEL.DEFAULT;
 
 		} );
 
-		QUnit.todo( "optimize", ( assert ) => {
+		QUnit.test( 'optimize', ( assert ) => {
 
-			assert.ok( false, "everything's gonna be alright" );
+			var track = new NumberKeyframeTrack( '.material.opacity', [ 0, 1, 2, 3, 4 ], [ 0, 0, 0, 0, 1 ] );
+
+			assert.equal( track.values.length, 5 );
+
+			track.optimize();
+
+			assert.smartEqual( Array.from( track.times ), [ 0, 3, 4 ] );
+			assert.smartEqual( Array.from( track.values ), [ 0, 0, 1 ] );
 
 		} );
 
 	} );
 
 } );
-

@@ -1,9 +1,6 @@
-/**
- * @author TristanVALCKE / https://github.com/Itee
- * @author moraxy / https://github.com/moraxy
- */
 /* global QUnit */
 
+import { runStdLightTests } from '../../utils/qunit-utils';
 import { AmbientLight } from '../../../../src/lights/AmbientLight';
 
 export default QUnit.module( 'Lights', () => {

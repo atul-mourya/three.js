@@ -1,10 +1,5 @@
-/**
- * @author bhouston / http://exocortex.com
- * @author TristanVALCKE / https://github.com/Itee
- */
 /* global QUnit */
 
-import { Ray } from '../../../../src/math/Ray';
 import { Box3 } from '../../../../src/math/Box3';
 import { Vector3 } from '../../../../src/math/Vector3';
 import { Sphere } from '../../../../src/math/Sphere';
@@ -26,7 +21,7 @@ export default QUnit.module( 'Maths', () => {
 
 			var a = new Sphere();
 			assert.ok( a.center.equals( zero3 ), "Passed!" );
-			assert.ok( a.radius == 0, "Passed!" );
+			assert.ok( a.radius == - 1, "Passed!" );
 
 			var a = new Sphere( one3.clone(), 1 );
 			assert.ok( a.center.equals( one3 ), "Passed!" );
@@ -45,7 +40,7 @@ export default QUnit.module( 'Maths', () => {
 
 			var a = new Sphere();
 			assert.ok( a.center.equals( zero3 ), "Passed!" );
-			assert.ok( a.radius == 0, "Passed!" );
+			assert.ok( a.radius == - 1, "Passed!" );
 
 			a.set( one3, 1 );
 			assert.ok( a.center.equals( one3 ), "Passed!" );
@@ -109,13 +104,33 @@ export default QUnit.module( 'Maths', () => {
 
 		} );
 
-		QUnit.test( "empty", ( assert ) => {
+		QUnit.test( "isEmpty", ( assert ) => {
 
 			var a = new Sphere();
-			assert.ok( a.empty(), "Passed!" );
+			assert.ok( a.isEmpty(), "Passed!" );
 
 			a.set( one3, 1 );
-			assert.ok( ! a.empty(), "Passed!" );
+			assert.ok( ! a.isEmpty(), "Passed!" );
+
+			// Negative radius contains no points
+			a.set( one3, -1 );
+			assert.ok( a.isEmpty(), "Passed!" );
+
+			// Zero radius contains only the center point
+			a.set( one3, 0 );
+			assert.ok( ! a.isEmpty(), "Passed!" );
+
+		} );
+
+		QUnit.test( "makeEmpty", ( assert ) => {
+
+			var a = new Sphere( one3.clone(), 1 );
+
+			assert.ok( ! a.isEmpty(), "Passed!" );
+
+			a.makeEmpty();
+			assert.ok( a.isEmpty(), "Passed!" );
+			assert.ok( a.center.equals( zero3 ), "Passed!" );
 
 		} );
 
@@ -125,6 +140,9 @@ export default QUnit.module( 'Maths', () => {
 
 			assert.ok( ! a.containsPoint( zero3 ), "Passed!" );
 			assert.ok( a.containsPoint( one3 ), "Passed!" );
+
+			a.set( zero3, 0 );
+			assert.ok( a.containsPoint( a.center ), "Passed!" );
 
 		} );
 
@@ -150,11 +168,11 @@ export default QUnit.module( 'Maths', () => {
 
 		QUnit.test( "intersectsBox", ( assert ) => {
 
-			var a = new Sphere();
-			var b = new Sphere( new Vector3( - 5, - 5, - 5 ) );
+			var a = new Sphere( zero3, 1 );
+			var b = new Sphere( new Vector3( - 5, - 5, - 5 ), 1 );
 			var box = new Box3( zero3, one3 );
 
-			assert.strictEqual( a.intersectsBox( box ), true, "Check default sphere" );
+			assert.strictEqual( a.intersectsBox( box ), true, "Check unit sphere" );
 			assert.strictEqual( b.intersectsBox( box ), false, "Check shifted sphere" );
 
 		} );
@@ -175,20 +193,31 @@ export default QUnit.module( 'Maths', () => {
 		QUnit.test( "clampPoint", ( assert ) => {
 
 			var a = new Sphere( one3.clone(), 1 );
+			var point = new Vector3();
 
-			assert.ok( a.clampPoint( new Vector3( 1, 1, 3 ) ).equals( new Vector3( 1, 1, 2 ) ), "Passed!" );
-			assert.ok( a.clampPoint( new Vector3( 1, 1, - 3 ) ).equals( new Vector3( 1, 1, 0 ) ), "Passed!" );
+			a.clampPoint( new Vector3( 1, 1, 3 ), point );
+			assert.ok( point.equals( new Vector3( 1, 1, 2 ) ), "Passed!" );
+			a.clampPoint( new Vector3( 1, 1, - 3 ), point );
+			assert.ok( point.equals( new Vector3( 1, 1, 0 ) ), "Passed!" );
 
 		} );
 
 		QUnit.test( "getBoundingBox", ( assert ) => {
 
 			var a = new Sphere( one3.clone(), 1 );
+			var aabb = new Box3();
 
-			assert.ok( a.getBoundingBox().equals( new Box3( zero3, two3 ) ), "Passed!" );
+			a.getBoundingBox( aabb );
+			assert.ok( aabb.equals( new Box3( zero3, two3 ) ), "Passed!" );
 
 			a.set( zero3, 0 );
-			assert.ok( a.getBoundingBox().equals( new Box3( zero3, zero3 ) ), "Passed!" );
+			a.getBoundingBox( aabb );
+			assert.ok( aabb.equals( new Box3( zero3, zero3 ) ), "Passed!" );
+
+			// Empty sphere produces empty bounding box
+			a.makeEmpty();
+			a.getBoundingBox( aabb );
+			assert.ok( aabb.isEmpty(), "Passed!" );
 
 		} );
 
@@ -196,8 +225,13 @@ export default QUnit.module( 'Maths', () => {
 
 			var a = new Sphere( one3.clone(), 1 );
 			var m = new Matrix4().makeTranslation( 1, - 2, 1 );
+			var aabb1 = new Box3();
+			var aabb2 = new Box3();
 
-			assert.ok( a.clone().applyMatrix4( m ).getBoundingBox().equals( a.getBoundingBox().applyMatrix4( m ) ), "Passed!" );
+			a.clone().applyMatrix4( m ).getBoundingBox( aabb1 );
+			a.getBoundingBox( aabb2 );
+
+			assert.ok( aabb1.equals( aabb2.applyMatrix4( m ) ), "Passed!" );
 
 		} );
 

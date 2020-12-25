@@ -1,6 +1,3 @@
-/**
- * @author simonThiele / https://github.com/simonThiele
- */
 /* global QUnit */
 
 import { BufferAttribute } from '../../../../src/core/BufferAttribute';
@@ -8,6 +5,7 @@ import { Color } from '../../../../src/math/Color';
 import { Vector2 } from '../../../../src/math/Vector2';
 import { Vector3 } from '../../../../src/math/Vector3';
 import { Vector4 } from '../../../../src/math/Vector4';
+import { DynamicDrawUsage } from '../../../../src/constants';
 
 export default QUnit.module( 'Core', () => {
 
@@ -42,45 +40,26 @@ export default QUnit.module( 'Core', () => {
 
 		} );
 
-		QUnit.test( "setArray", ( assert ) => {
+		QUnit.test( "setUsage", ( assert ) => {
 
-			var f32a = new Float32Array( [ 1, 2, 3, 4 ] );
-			var a = new BufferAttribute( f32a, 2, false );
+			var attr = new BufferAttribute();
+			attr.setUsage( DynamicDrawUsage );
 
-			a.setArray( f32a, 2 );
-
-			assert.strictEqual( a.count, 2, "Check item count" );
-			assert.strictEqual( a.array, f32a, "Check array" );
-
-			assert.throws(
-				function () {
-
-					a.setArray( [ 1, 2, 3, 4 ] );
-
-				},
-				/array should be a Typed Array/,
-				"Calling setArray with a simple array throws Error"
-			);
-
-		} );
-
-		QUnit.todo( "setDynamic", ( assert ) => {
-
-			assert.ok( false, "everything's gonna be alright" );
+			assert.strictEqual( attr.usage, DynamicDrawUsage, "Usage was set" );
 
 		} );
 
 		QUnit.test( "copy", ( assert ) => {
 
 			var attr = new BufferAttribute( new Float32Array( [ 1, 2, 3, 4, 5, 6 ] ), 3 );
-			attr.setDynamic( true );
+			attr.setUsage( DynamicDrawUsage );
 			attr.needsUpdate = true;
 
 			var attrCopy = new BufferAttribute().copy( attr );
 
 			assert.ok( attr.count === attrCopy.count, 'count is equal' );
 			assert.ok( attr.itemSize === attrCopy.itemSize, 'itemSize is equal' );
-			assert.ok( attr.dynamic === attrCopy.dynamic, 'dynamic is equal' );
+			assert.ok( attr.usage === attrCopy.usage, 'usage is equal' );
 			assert.ok( attr.array.length === attrCopy.array.length, 'array length is equal' );
 			assert.ok( attr.version === 1 && attrCopy.version === 0, 'version is not copied which is good' );
 
@@ -127,29 +106,6 @@ export default QUnit.module( 'Core', () => {
 			var i = attr.array;
 			assert.ok( i[ 0 ] === 0 && i[ 1 ] === 0.5 && i[ 2 ] === 1, 'first color was copied correctly' );
 			assert.ok( i[ 3 ] === 0.25 && i[ 4 ] === 1 && i[ 5 ] === 0, 'second color was copied correctly' );
-
-		} );
-
-		QUnit.test( "copyIndicesArray", ( assert ) => {
-
-			var attr = new BufferAttribute( new Float32Array( 6 ), 3 );
-
-			attr.copyIndicesArray( [
-				{
-					a: 1,
-					b: 2,
-					c: 3
-				},
-				{
-					a: 4,
-					b: 5,
-					c: 6
-				}
-			] );
-
-			var i = attr.array;
-			assert.ok( i[ 0 ] === 1 && i[ 1 ] === 2 && i[ 2 ] === 3, 'first indices were copied correctly' );
-			assert.ok( i[ 3 ] === 4 && i[ 4 ] === 5 && i[ 5 ] === 6, 'second indices were copied correctly' );
 
 		} );
 

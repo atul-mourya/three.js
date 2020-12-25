@@ -1,7 +1,3 @@
-/**
- * @author simonThiele / https://github.com/simonThiele
- * @author TristanVALCKE / https://github.com/Itee
- */
 /* global QUnit */
 
 import { Clock } from '../../../../src/core/Clock';
@@ -65,6 +61,13 @@ export default QUnit.module( 'Core', () => {
 
 		// OTHERS
 		QUnit.test( "clock with performance", ( assert ) => {
+
+			if ( typeof performance === 'undefined' ) {
+
+				assert.expect( 0 );
+				return;
+
+			}
 
 			mockPerformance();
 

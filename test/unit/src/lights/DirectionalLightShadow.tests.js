@@ -1,9 +1,7 @@
-/**
- * @author TristanVALCKE / https://github.com/Itee
- * @author moraxy / https://github.com/moraxy
- */
 /* global QUnit */
 
+import { ObjectLoader } from '../../../../src/loaders/ObjectLoader';
+import { DirectionalLight } from '../../../../src/lights/DirectionalLight';
 import { DirectionalLightShadow } from '../../../../src/lights/DirectionalLightShadow';
 
 export default QUnit.module( 'Lights', () => {

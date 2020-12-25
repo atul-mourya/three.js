@@ -1,8 +1,4 @@
-/**
- * @author Don McCurdy / https://www.donmccurdy.com
- */
-
-var LoaderUtils = {
+const LoaderUtils = {
 
 	decodeText: function ( array ) {
 
@@ -15,29 +11,36 @@ var LoaderUtils = {
 		// Avoid the String.fromCharCode.apply(null, array) shortcut, which
 		// throws a "maximum call stack size exceeded" error for large arrays.
 
-		var s = '';
+		let s = '';
 
-		for ( var i = 0, il = array.length; i < il; i ++ ) {
+		for ( let i = 0, il = array.length; i < il; i ++ ) {
 
 			// Implicitly assumes little-endian.
 			s += String.fromCharCode( array[ i ] );
 
 		}
 
-		// Merges multi-byte utf-8 characters.
-		return decodeURIComponent( escape( s ) );
+		try {
+
+			// merges multi-byte utf-8 characters.
+
+			return decodeURIComponent( escape( s ) );
+
+		} catch ( e ) { // see #16358
+
+			return s;
+
+		}
 
 	},
 
 	extractUrlBase: function ( url ) {
 
-		var parts = url.split( '/' );
+		const index = url.lastIndexOf( '/' );
 
-		if ( parts.length === 1 ) return './';
+		if ( index === - 1 ) return './';
 
-		parts.pop();
-
-		return parts.join( '/' ) + '/';
+		return url.substr( 0, index + 1 );
 
 	}
 

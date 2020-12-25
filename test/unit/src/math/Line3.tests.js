@@ -1,7 +1,3 @@
-/**
- * @author bhouston / http://exocortex.com
- * @author TristanVALCKE / https://github.com/Itee
- */
 /* global QUnit */
 
 import { Line3 } from '../../../../src/math/Line3';
@@ -79,21 +75,36 @@ export default QUnit.module( 'Maths', () => {
 
 		} );
 
-		QUnit.todo( "getCenter", ( assert ) => {
+		QUnit.test( "getCenter", ( assert ) => {
 
-			assert.ok( false, "everything's gonna be alright" );
+			var center = new Vector3();
 
-		} );
-
-		QUnit.todo( "delta", ( assert ) => {
-
-			assert.ok( false, "everything's gonna be alright" );
+			var a = new Line3( zero3.clone(), two3.clone() );
+			assert.ok( a.getCenter( center ).equals( one3.clone() ), "Passed" );
 
 		} );
 
-		QUnit.todo( "distanceSq", ( assert ) => {
+		QUnit.test( "delta", ( assert ) => {
 
-			assert.ok( false, "everything's gonna be alright" );
+			var delta = new Vector3();
+
+			var a = new Line3( zero3.clone(), two3.clone() );
+			assert.ok( a.delta( delta ).equals( two3.clone() ), "Passed" );
+
+		} );
+
+		QUnit.test( "distanceSq", ( assert ) => {
+
+			var a = new Line3( zero3, zero3 );
+			var b = new Line3( zero3, one3 );
+			var c = new Line3( one3.clone().negate(), one3 );
+			var d = new Line3( two3.clone().multiplyScalar( - 2 ), two3.clone().negate() );
+
+			assert.numEqual( a.distanceSq(), 0, "Check squared distance for zero-length line" );
+			assert.numEqual( b.distanceSq(), 3, "Check squared distance for simple line" );
+			assert.numEqual( c.distanceSq(), 12, "Check squared distance for negative to positive endpoints" );
+			assert.numEqual( d.distanceSq(), 12, "Check squared distance for negative to negative endpoints" );
+
 
 		} );
 
@@ -114,37 +125,43 @@ export default QUnit.module( 'Maths', () => {
 		QUnit.test( "at", ( assert ) => {
 
 			var a = new Line3( one3.clone(), new Vector3( 1, 1, 2 ) );
+			var point = new Vector3();
 
-			assert.ok( a.at( - 1 ).distanceTo( new Vector3( 1, 1, 0 ) ) < 0.0001, "Passed!" );
-			assert.ok( a.at( 0 ).distanceTo( one3.clone() ) < 0.0001, "Passed!" );
-			assert.ok( a.at( 1 ).distanceTo( new Vector3( 1, 1, 2 ) ) < 0.0001, "Passed!" );
-			assert.ok( a.at( 2 ).distanceTo( new Vector3( 1, 1, 3 ) ) < 0.0001, "Passed!" );
+			a.at( - 1, point );
+			assert.ok( point.distanceTo( new Vector3( 1, 1, 0 ) ) < 0.0001, "Passed!" );
+			a.at( 0, point );
+			assert.ok( point.distanceTo( one3.clone() ) < 0.0001, "Passed!" );
+			a.at( 1, point );
+			assert.ok( point.distanceTo( new Vector3( 1, 1, 2 ) ) < 0.0001, "Passed!" );
+			a.at( 2, point );
+			assert.ok( point.distanceTo( new Vector3( 1, 1, 3 ) ) < 0.0001, "Passed!" );
 
 		} );
 
 		QUnit.test( "closestPointToPoint/closestPointToPointParameter", ( assert ) => {
 
 			var a = new Line3( one3.clone(), new Vector3( 1, 1, 2 ) );
+			var point = new Vector3();
 
 			// nearby the ray
 			assert.ok( a.closestPointToPointParameter( zero3.clone(), true ) == 0, "Passed!" );
-			var b1 = a.closestPointToPoint( zero3.clone(), true );
-			assert.ok( b1.distanceTo( new Vector3( 1, 1, 1 ) ) < 0.0001, "Passed!" );
+			a.closestPointToPoint( zero3.clone(), true, point );
+			assert.ok( point.distanceTo( new Vector3( 1, 1, 1 ) ) < 0.0001, "Passed!" );
 
 			// nearby the ray
 			assert.ok( a.closestPointToPointParameter( zero3.clone(), false ) == - 1, "Passed!" );
-			var b2 = a.closestPointToPoint( zero3.clone(), false );
-			assert.ok( b2.distanceTo( new Vector3( 1, 1, 0 ) ) < 0.0001, "Passed!" );
+			 a.closestPointToPoint( zero3.clone(), false, point );
+			assert.ok( point.distanceTo( new Vector3( 1, 1, 0 ) ) < 0.0001, "Passed!" );
 
 			// nearby the ray
 			assert.ok( a.closestPointToPointParameter( new Vector3( 1, 1, 5 ), true ) == 1, "Passed!" );
-			var b = a.closestPointToPoint( new Vector3( 1, 1, 5 ), true );
-			assert.ok( b.distanceTo( new Vector3( 1, 1, 2 ) ) < 0.0001, "Passed!" );
+			a.closestPointToPoint( new Vector3( 1, 1, 5 ), true, point );
+			assert.ok( point.distanceTo( new Vector3( 1, 1, 2 ) ) < 0.0001, "Passed!" );
 
 			// exactly on the ray
 			assert.ok( a.closestPointToPointParameter( one3.clone(), true ) == 0, "Passed!" );
-			var c = a.closestPointToPoint( one3.clone(), true );
-			assert.ok( c.distanceTo( one3.clone() ) < 0.0001, "Passed!" );
+			a.closestPointToPoint( one3.clone(), true, point );
+			assert.ok( point.distanceTo( one3.clone() ) < 0.0001, "Passed!" );
 
 		} );
 
@@ -186,9 +203,11 @@ export default QUnit.module( 'Maths', () => {
 
 		} );
 
-		QUnit.todo( "equals", ( assert ) => {
+		QUnit.test( "equals", ( assert ) => {
 
-			assert.ok( false, "everything's gonna be alright" );
+			var a = new Line3( zero3.clone(), zero3.clone() );
+			var b = new Line3();
+			assert.ok( a.equals( b ), "Passed" );
 
 		} );
 
